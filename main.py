@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
@@ -48,8 +49,13 @@ if uploaded_file is not None:
         data = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
 
     # Нормализация данных
-    scaler = StandardScaler()
-    data_scaled = scaler.fit_transform(data)
+    #scaler = StandardScaler()
+    #data_scaled = scaler.fit_transform(data)
+    data_scaled = preprocessing.MinMaxScaler().fit_transform(data)
+
+    # Вывод нормализованных данных
+    st.write('### Нормализованные данные:')
+    st.write(data_scaled)
 
     # Выбор целевых столбцов
     target_columns = st.multiselect('Выберите целевые столбцы:', data.columns)
@@ -87,7 +93,7 @@ if uploaded_file is not None:
         labels = clustering.fit_predict(data_scaled)
 
         # Визуализация кластеров на двумерном графике
-        if data_scaled.shape[1] >= 2:  # Проверка, что у нас есть как минимум 2 признака для визуализации
+        if data_scaled.shape[1] >= 2:
             fig, ax = plt.subplots()
             for cluster in range(num_clusters):
                 cluster_data = pd.DataFrame(data_scaled[labels == cluster], columns=data.columns)
@@ -99,6 +105,8 @@ if uploaded_file is not None:
                 cluster_data = pd.DataFrame(data_scaled[labels == cluster], columns=data.columns)
                 centroids[cluster] = cluster_data.mean(axis=0)
                 ax.scatter(centroids[cluster, 0], centroids[cluster, 1], marker='x', color='black')
+                #вывод центров кластеров
+                st.write(f'Центр кластера {cluster + 1}: {centroids[cluster]}')
 
             ax.set_title('Визуализация кластеров с центроидами')
             ax.set_xlabel('Признак 1')
@@ -118,7 +126,7 @@ if uploaded_file is not None:
         # Вывод таблиц для каждого кластера
         for cluster in range(num_clusters):
             st.write(f'### Кластер {cluster + 1}:')
-            cluster_data = pd.DataFrame(data[labels == cluster], columns=data.columns)
+            cluster_data = data[labels == cluster]
             st.write(cluster_data)
 
     elif num_clusters_custom != '':
